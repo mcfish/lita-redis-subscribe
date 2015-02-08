@@ -3,10 +3,11 @@ module Lita
   module Handlers
     class RedisSubscribe < Handler
 
-      config :host,   type: String
-      config :port,   type: Integer
-      config :prefix, type: String
-      config :suffix, type: String
+      config :host,    type: String
+      config :port,    type: Integer
+      config :prefix,  type: String
+      config :suffix,  type: String
+      config :sep_str, type: String
 
       on :connected, :delete_all_keys
 
