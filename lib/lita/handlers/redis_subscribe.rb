@@ -10,7 +10,7 @@ module Lita
 
       on :connected, :delete_all_keys
 
-      route(/^subscribe\s+(.+)$/, :subscribe, help: { "subscribe KEY" => "Starting redis subscribe." })
+      route(/^subscribe\s+(.+)$/, :subscribe, help: { "subscribe CHANNEL" => "Starting redis subscribe." })
 
       def subscribe(response)
         subscribe_key = subscribe_key_gen(response.matches.first)
@@ -43,18 +43,18 @@ module Lita
         redis.keys("*#{redis_key_gen}*").map {|k| redis.del(k)}
       end
 
-      def subscribe_key_gen(subscribe_key = nil)
+      def subscribe_key_gen(channel_key = nil)
         keys = []
         keys << config.prefix if config.prefix
-        keys << subscribe_key if subscribe_key
+        keys << channel_key   if channel_key
         keys << config.suffix if config.suffix
         return if keys.size == 0
         keys.join config.sep_str
       end
 
-      def redis_key_gen(key = nil, room_id = nil)
+      def redis_key_gen(subscribe_key = nil, room_id = nil)
         keys = []
-        keys << key     if key
+        keys << subscribe_key if subscribe_key
         keys << self.class.to_s
         keys << room_id if room_id
         keys.join ?:

@@ -2,10 +2,11 @@
 
 Bootup with chatroom.
 
-say `subscribe KEY`
+say 'subscribe CHANNEL'
 
 Connecting and subscribe to redis.
-Channel key => [prefix, KEY, suffix] join to sep_str.
+
+Channel key => [prefix, CHANNEL, suffix] join to sep_str.
 
 ## Installation
 
@@ -29,7 +30,11 @@ end
 
 ## Usage
 
-TODO: Describe the plugin's features and how to use them.
+Call only once.
+
+```
+Lita: subscribe CHANNEL
+```
 
 ## License
 
