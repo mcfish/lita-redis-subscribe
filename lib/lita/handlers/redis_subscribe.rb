@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require 'pp'
 module Lita
   module Handlers
     class RedisSubscribe < Handler
@@ -8,35 +9,58 @@ module Lita
       config :prefix,  type: String
       config :suffix,  type: String
       config :sep_str, type: String
+      config :auto_connects, type: Hash
 
-      on :connected, :delete_all_keys
+      on(:connected) do |payload|
+        delete_all_keys
+        if config.auto_connects
+          config.auto_connects.each do |room_id, redis_key|
+            target = Lita::Source.new(room: room_id)
+            subscribe_key = subscribe_key_gen(redis_key)
+            redis_key = redis_key_gen(subscribe_key, target.room)
+            do_subscribe(redis_key, target)
+          end
+        end
+      end
 
       route(/^subscribe\s+(.+)$/, :subscribe, help: { "subscribe CHANNEL" => "Starting redis subscribe." })
 
       def subscribe(response)
         subscribe_key = subscribe_key_gen(response.matches.first)
         redis_key = redis_key_gen(subscribe_key, response.message.source.room)
+        do_subscribe(redis_key)
+      end
+
+      def do_subscribe(redis_key, target=nil)
         if redis.get(redis_key)
-          response.reply("Im working! ヽ(｀Д´#)ﾉ")
+          do_send_message("Im working! ヽ(｀Д´#)ﾉ", target)
           return
         end
         redis.set(redis_key, true)
         every(0) do |timer|
           begin
-            response.reply("connect to [#{subscribe_key}] ...")
+            do_send_message("connect to [#{subscribe_key}] ...", target)
             redis_client = Redis.new(host: config.host, port: config.port)
-            response.reply("complete.")
+            do_send_message("complete.", target)
             redis_client.subscribe(subscribe_key) do |on|
               on.message do |ch, msg|
                 post = JSON.parse(msg)
                 body = post['message'] or next
-                response.reply(body)
+                do_send_message(body, target)
               end
             end
           rescue
             sleep 1
             retry
           end
+        end
+      end
+
+      def do_send_message(text, target)
+        if target
+          robot.send_message(target, text)
+        else
+          response.reply(text)
         end
       end
 

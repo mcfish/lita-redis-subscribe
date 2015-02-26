@@ -25,6 +25,7 @@ Lita.configure do |config|
   config.handlers.redis_subscribe.prefix = "prefix"
   config.handlers.redis_subscribe.suffix = "suffix"
   config.handlers.redis_subscribe.sep_str = "."
+  config.handlers.redis_subscribe.auto_connects = {room_id => key}
 end
 ```
 
