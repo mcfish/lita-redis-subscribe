@@ -17,7 +17,7 @@ module Lita
             target = Lita::Source.new(room: room_id)
             subscribe_key = subscribe_key_gen(key)
             redis_key = redis_key_gen(subscribe_key, target.room)
-            do_subscribe(redis_key, {:target => target})
+            do_subscribe(subscribe_key, redis_key, {:target => target})
           end
         end
       end
@@ -27,10 +27,10 @@ module Lita
       def subscribe(response)
         subscribe_key = subscribe_key_gen(response.matches.first)
         redis_key = redis_key_gen(subscribe_key, response.message.source.room)
-        do_subscribe(redis_key, {:response => response})
+        do_subscribe(subscribe_key, redis_key, {:response => response})
       end
 
-      def do_subscribe(redis_key, opt)
+      def do_subscribe(subscribe_key, redis_key, opt)
         if redis.get(redis_key)
           do_send_message("Im working! ヽ(｀Д´#)ﾉ", opt)
           return
