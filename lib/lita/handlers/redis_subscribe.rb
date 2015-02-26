@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-require 'pp'
 module Lita
   module Handlers
     class RedisSubscribe < Handler
@@ -14,11 +13,11 @@ module Lita
       on(:connected) do |payload|
         delete_all_keys
         if config.auto_connects
-          config.auto_connects.each do |room_id, redis_key|
+          config.auto_connects.each do |room_id, key|
             target = Lita::Source.new(room: room_id)
-            subscribe_key = subscribe_key_gen(redis_key)
+            subscribe_key = subscribe_key_gen(key)
             redis_key = redis_key_gen(subscribe_key, target.room)
-            do_subscribe(redis_key, target)
+            do_subscribe(redis_key, {:target => target})
           end
         end
       end
@@ -28,25 +27,25 @@ module Lita
       def subscribe(response)
         subscribe_key = subscribe_key_gen(response.matches.first)
         redis_key = redis_key_gen(subscribe_key, response.message.source.room)
-        do_subscribe(redis_key)
+        do_subscribe(redis_key, {:response => response})
       end
 
-      def do_subscribe(redis_key, target=nil)
+      def do_subscribe(redis_key, opt)
         if redis.get(redis_key)
-          do_send_message("Im working! ヽ(｀Д´#)ﾉ", target)
+          do_send_message("Im working! ヽ(｀Д´#)ﾉ", opt)
           return
         end
         redis.set(redis_key, true)
         every(0) do |timer|
           begin
-            do_send_message("connect to [#{subscribe_key}] ...", target)
+            do_send_message("connect to redis ...", opt)
             redis_client = Redis.new(host: config.host, port: config.port)
-            do_send_message("complete.", target)
+            do_send_message("connected.", opt)
             redis_client.subscribe(subscribe_key) do |on|
               on.message do |ch, msg|
                 post = JSON.parse(msg)
                 body = post['message'] or next
-                do_send_message(body, target)
+                do_send_message(body, opt)
               end
             end
           rescue
@@ -56,11 +55,11 @@ module Lita
         end
       end
 
-      def do_send_message(text, target)
-        if target
-          robot.send_message(target, text)
-        else
-          response.reply(text)
+      def do_send_message(text, opt)
+        if opt.has_key? :target
+          robot.send_message(opt[:target], text)
+        elsif opt.has_key? :response
+          opt[:response].reply(text)
         end
       end
 
