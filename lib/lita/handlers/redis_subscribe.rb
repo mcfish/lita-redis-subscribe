@@ -38,9 +38,7 @@ module Lita
         redis.set(redis_key, true)
         every(0) do |timer|
           begin
-            do_send_message("connect to redis ...", opt)
             redis_client = Redis.new(host: config.host, port: config.port)
-            do_send_message("connected.", opt)
             redis_client.subscribe(subscribe_key) do |on|
               on.message do |ch, msg|
                 post = JSON.parse(msg)

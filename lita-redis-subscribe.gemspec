@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "lita-redis-subscribe"
-  spec.version       = "0.0.2"
+  spec.version       = "0.0.3"
   spec.authors       = ["ata.1213"]
   spec.email         = ["ata.1213@gmail.com"]
   spec.description   = %q{A Lita handler for subscribe to redis}
